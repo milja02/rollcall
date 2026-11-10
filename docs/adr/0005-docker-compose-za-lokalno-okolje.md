@@ -8,38 +8,32 @@ decision-makers: Nikola Miljković
 
 ## Kontekst in problem
 
-Za zagon aplikacije so potrebni trije deli, in sicer PostgreSQL, strežnik Django in razvojni strežnik Vite. Vsak od njih pričakuje svoje okolje in svojo različico Pythona, Node ali PostgreSQL.
+Aplikacija ima tri dele: PostgreSQL, strežnik Django in razvojni strežnik Vite. Vsak potrebuje svoje izvajalno okolje in svojo različico Pythona, Noda ali PostgreSQL.
 
-Projekt bo ocenjen, zato ga bo moral zagnati nekdo, ki ga ni gradil in ki ne bo iskal razloga, zakaj se ne zažene. Razvijam na sistemu Windows, kjer je PostgreSQL nameščen kot storitev in zaseda privzeta vrata, na računalniku pa je že druga namestitev iz prejšnjega projekta.
+Projekt se ocenjuje, zato ga mora zagnati tudi nekdo, ki ga ni razvil, brez dodatnih nastavitev. Razvijam na Windows, kjer starejša namestitev PostgreSQL iz drugega projekta že zaseda privzeta vrata.
 
-Vprašanje je torej, kako okolje opisati tako, da se na drugem računalniku postavi enako.
+Vprašanje je, kako opisati okolje, da se na vsakem računalniku zažene enako.
 
 ## Obravnavane možnosti
 
-- Vse nameščeno na gostitelju, torej PostgreSQL kot storitev, virtualno okolje za Python in npm za odjemalca
-- V Dockerju samo baza, obe aplikaciji pa neposredno na gostitelju
+- Vse nameščeno na gostitelju: PostgreSQL kot storitev, virtualno okolje za Python in npm za odjemalca
+- V Dockerju samo baza, obe aplikaciji pa na gostitelju
 - Docker Compose za vse tri dele
 - Devcontainer v orodju Visual Studio Code
 
 ## Odločitev
 
-Izbrana možnost: Docker Compose za vse tri dele.
+Izbrana možnost: Docker Compose za vse tri dele, ker se celoten projekt zažene z enim ukazom, edina zahteva pa je Docker. Različice Pythona, Noda in PostgreSQL so določene v repozitoriju, vsebnik z bazo pa je ločen od vsake namestitve PostgreSQL na gostitelju. Ob zagonu vsebnika za backend se izvedejo migracije in naložijo demo podatki z enim uporabnikom za vsako vlogo, zato je sistem mogoče uporabljati takoj po prvem zagonu.
 
-Odloči zahteva, da je navodilo za zagon en ukaz, ki počiva na eni predpostavki, to je na nameščenem Dockerju. To je pomembno, ker projekt poganjajo ljudje, ki ga niso gradili, in ker vsak od treh delov pričakuje svojo različico Pythona, Node ali PostgreSQL. Zapis teh različic v repozitorij nadomesti navodila, napisana v besedilu, ki se slabo starajo in se berejo izbirno. Baza v vsebniku je poleg tega izolirana od namestitve na razvojnem računalniku, kjer PostgreSQL teče kot storitev na privzetih vratih, kar odpravi spor, ki bi ga sicer morali pojasniti vsakomur, ki projekt zažene.
-
-Migracije in demo podatki, po en uporabnik za vsako vlogo, se izvedejo ob zagonu vsebnika z zalednim delom, zato je sistem uporaben takoj in ne šele po dokumentiranem zaporedju namestitvenih ukazov.
-
-Srednja možnost, torej baza v vsebniku in obe aplikaciji na gostitelju, je za vsakodnevno delo hitrejša in jo mnogi projekti izberejo. Zavrnjena je, ker od tistega, ki projekt zažene, še vedno zahteva pravo različico Pythona in Node, prav ti dve stvari pa naj bi ta odločitev odpravila.
-
-Devcontainer bi dosegel enak izid, a bi okolje vezal na Visual Studio Code. Compose deluje iz katerega koli urejevalnika in ga uporabimo tudi takrat, kadar aplikacijo le zaženemo in je ne urejamo.
+Če bi bilo vse nameščeno na gostitelju, bi vsak računalnik potreboval prave različice Pythona, Noda in PostgreSQL. Samo baza v Dockerju je hitrejša za vsakodnevno delo, vendar na gostitelju še vedno zahteva Python in Node. Devcontainer bi dal enak rezultat, vendar okolje veže na Visual Studio Code.
 
 ### Posledice
 
-- Dobro, ker je zagon projekta en sam ukaz, odvisnosti z različicami pa so vidne v repozitoriju in se spremljajo skupaj s kodo.
-- Dobro, ker je okolje enako na vsakem računalniku, kar odpravi razred težav, ki se pokažejo šele pri drugem človeku, ki projekt zažene.
-- Dobro, ker je baza izolirana od namestitve na gostitelju in z njo ne tekmuje ne za vrata ne za podatke.
-- Dobro, ker je sistem po prvem zagonu že napolnjen z demo podatki in ga je mogoče takoj preizkusiti.
-- Slabo, ker je ponovno grajenje slik počasno, Docker Desktop pa porabi opazno količino pomnilnika, kar se pozna ob vsaki spremembi odvisnosti.
-- Slabo, ker sprotno osveževanje odjemalca v vsebniku ne deluje samo po sebi. Zahteva pravilno nastavljene priklope in opazovanje datotek s poizvedovanjem, torej nastavitev, ki se je pri zagonu na gostitelju ne bi dotaknili.
-- Slabo, ker razhroščevanje iz urejevalnika zahteva priklop na proces v vsebniku in ne na lokalni proces.
-- Slabo, ker Docker postane predpogoj za razvoj. Brez delujoče namestitve projekta ni mogoče zagnati niti deloma.
+- Dobro, ker se projekt zažene z enim ukazom, vse različice pa so določene v repozitoriju.
+- Dobro, ker je okolje na vsakem računalniku enako.
+- Dobro, ker baza ni v sporu z namestitvijo PostgreSQL na gostitelju, ne glede vrat ne glede podatkov.
+- Dobro, ker so demo podatki na voljo že po prvem zagonu.
+- Slabo, ker je ponovna gradnja slik počasna, Docker Desktop na Windows pa porabi veliko pomnilnika.
+- Slabo, ker samodejno osveževanje odjemalca v vsebniku zahteva dodatno nastavitev priklopov in spremljanja datotek.
+- Slabo, ker je razhroščevanje iz urejevalnika zahtevnejše, saj se mora razhroščevalnik povezati s procesom v vsebniku.
+- Slabo, ker mora biti nameščen Docker, sicer projekta ni mogoče zagnati.

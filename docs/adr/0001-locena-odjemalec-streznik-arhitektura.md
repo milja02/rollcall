@@ -8,9 +8,9 @@ decision-makers: Nikola Miljković
 
 ## Kontekst in problem
 
-RollCall ima tri vloge, od katerih vsaka vidi drug del sistema. Predavatelj dela v mesečnem koledarju, koordinator pregleduje čakajoče prijave prisotnosti vrstico za vrstico, administrator pa upravlja uporabniške račune.
+RollCall ima tri vloge in vsaka dela z drugim delom sistema. Predavatelj uporablja mesečni koledar, koordinator pregleduje čakajoče prijave prisotnosti, administrator pa upravlja uporabniške račune. Sistem razvija en razvijalec v enem semestru, iste podatke pa naj bi pozneje uporabljali tudi drugi odjemalci, na primer izvoz koledarja ali mobilna aplikacija.
 
-Vse to je mogoče zgraditi kot en projekt Django, ki vrača izrisane strani, ali kot ločen odjemalec, ki se s strežnikom pogovarja prek REST API. Vprašanje je, katero od obojega zgraditi, ob tem da projekt piše en sam razvijalec v enem semestru in da naj bi bili isti podatki pozneje dosegljivi tudi odjemalcem, ki niso brskalnik.
+Vprašanje je, ali RollCall zgraditi kot en projekt Django, ki vrača izrisane strani, ali kot ločen odjemalec, ki s strežnikom komunicira prek REST API.
 
 ## Obravnavane možnosti
 
@@ -20,19 +20,16 @@ Vse to je mogoče zgraditi kot en projekt Django, ki vrača izrisane strani, ali
 
 ## Odločitev
 
-Izbrana možnost: ločen odjemalec in strežnik, ki ponuja REST API.
+Izbrana možnost: ločen odjemalec in strežnik, ki ponuja REST API, ker API postane edini vmesnik do sistema. Vsa poslovna pravila, kot so zaznavanje prekrivanja terminov, zaklep meseca in pravice vlog, se uveljavljajo na strežniku, vsak odjemalec pa jih uporablja prek istih končnih točk. Odjemalec je napisan v Reactu, ki je hkrati del sklada, ki se ga želim na tem projektu naučiti.
 
-Sama interaktivnost tega ne bi opravičila. Trije od štirih načrtovanih zaslonov so prijavni obrazec, obrazec z dvema izbirama in tabela z dejanji po vrsticah. Četrti je koledar, pri katerem premik med meseci v obeh zasnovah pridobi podatke s strežnika. HTMX bi vse štiri pokril z manj kode. Tudi potreba po API odločitve ne izsili, saj Django iz istega projekta streže izrisane strani in končne točke REST.
-
-Odloči to, da je API mišljen kot glavni vmesnik v sistem in ne kot nekaj, kar stoji ob njem. Vsako pravilo, ki ga sistem uveljavlja, od zaznavanja prekrivanj do zaklepa meseca, je dosegljivo samo prek njega, zato vsak poznejši odjemalec dobi isto uveljavljanje in ničesar ni treba napisati drugič. Drugi razlog je nameren in ga velja povedati naravnost. Odjemalca želim zgraditi v Reactu, ker se na tem projektu učim prav tega dela sklada.
-
-Ta odločitev v prvem semestru stane več dela, kot ga v njem vrne. Sprejeta je zaradi tega, kar vrne pozneje, in sicer ene same točke uveljavljanja za vsako pravilo ter vmesnika, ki ga poznejši odjemalci lahko uporabijo nespremenjenega.
+Monolit Django s predlogami bi zahteval najmanj kode, vendar bi bilo treba za vsakega odjemalca, ki ni brskalnik, dodati ločen API. HTMX bi omogočil interaktivne strani z malo JavaScripta, vendar bi bil vmesnik še vedno vezan na strežnik.
 
 ### Posledice
 
-- Dobro, ker obstaja natanko eno mesto, kjer se pravilo uveljavi, zato nobena napaka v odjemalcu ne more povzročiti dvojne dodelitve ali spremeniti zapisa o izvedbi. Ti zapisi so podlaga za izplačilo predavateljem, in prav to je najmočnejši razlog za tako delitev.
-- Dobro, ker isti API brez sprememb pokrije poznejše odjemalce, med njimi izvoz koledarja in morebitno mobilno aplikacijo.
-- Dobro, ker je odjemalca mogoče prepisati ali zamenjati, ne da bi se dotaknili enega samega pravila, kar na projektu, ki se nadaljuje skozi nadaljnje naloge, ni le teoretična prednost.
-- Dobro, ker se odjemalec in strežnik razvijata in preizkušata ločeno, zato je mogoče pravilo o prekrivanju terminov in zaklep meseca preizkusiti neposredno, brez brskalnika in še preden obstaja kakšen vmesnik.
-- Slabo, ker namesto enega projekta vzdržujemo dva, z dvema naboroma odvisnosti in dvema potema zagona, prvi delujoči zaslon pa je bolj oddaljen, saj morajo usmerjanje, hranjenje stanja in klici API obstajati, preden je sploh kaj vidno.
-- Slabo, ker vsak obrazec potrebuje preverjanje na odjemalcu in na strežniku, vsak pogled pa svoje stanje nalaganja, praznega seznama in napake, kar strežniško izrisana stran ponudi že s tem, da se vrne.
+- Dobro, ker se vsako pravilo uveljavi na enem mestu, zato odjemalec ne more povzročiti dvojne dodelitve ali spremeniti potrjenega zapisa o izvedbi.
+- Dobro, ker poznejši odjemalci, kot sta izvoz koledarja ali mobilna aplikacija, uporabljajo isti API brez sprememb na strežniku.
+- Dobro, ker je odjemalca mogoče spremeniti ali zamenjati, ne da bi posegali v poslovna pravila.
+- Dobro, ker je strežnik mogoče preizkušati samostojno, zato je pravilo o prekrivanju in zaklep meseca mogoče preveriti, še preden obstaja vmesnik.
+- Slabo, ker vzdržujemo dva projekta, vsakega s svojimi odvisnostmi in zagonom.
+- Slabo, ker je pred prvim delujočim zaslonom potrebnega več dela, saj morajo najprej obstajati usmerjanje, upravljanje stanja in klici API.
+- Slabo, ker je treba preverjanje vnosov ter stanja nalaganja, praznega seznama in napake izdelati tudi v odjemalcu.

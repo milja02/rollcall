@@ -8,9 +8,9 @@ decision-makers: Nikola Miljković
 
 ## Kontekst in problem
 
-Strežnik mora pokriti uporabniške račune z gesli, tri vloge z različnimi pravicami, štiri med sabo povezane tabele in shemo, ki se bo skozi semester še spreminjala. Domena je večinoma ustvarjanje, branje, posodabljanje in brisanje nad relacijskimi podatki, na to pa je položenih nekaj pravil, kot so prekrivanje terminov, prehodi stanj prijave in zaklep meseca. Vzporednosti je malo, dolgotrajnih povezav ni, nič se ne pretaka.
+Strežnik mora upravljati uporabniške račune z gesli, tri vloge z različnimi pravicami in štiri povezane tabele, katerih shema se bo med semestrom spreminjala. Večina dela je ustvarjanje, branje, posodabljanje in brisanje relacijskih podatkov, nad tem pa je nekaj pravil, kot so prekrivanje terminov, prehodi stanj prijav in zaklep meseca. Sočasnih zahtev je malo, dolgotrajnih povezav ni, podatki pa se ne pretakajo.
 
-Projekt razvija en razvijalec v enem semestru, zato je pomembno, koliko infrastrukture je treba napisati, preden nastane prva funkcionalnost. Python je jezik, v katerem želim delati na tem projektu, kar izbiro zoži na ogrodja v Pythonu.
+Projekt razvija en razvijalec v enem semestru, zato naj ogrodje ponudi čim več osnovne infrastrukture. Strežnik je napisan v Pythonu.
 
 ## Obravnavane možnosti
 
@@ -20,20 +20,16 @@ Projekt razvija en razvijalec v enem semestru, zato je pomembno, koliko infrastr
 
 ## Odločitev
 
-Izbrana možnost: Django in Django REST Framework.
+Izbrana možnost: Django in Django REST Framework, ker so uporabniški model, zgoščevanje gesel, ORM, migracije in administratorski vmesnik del ogrodja in jih ni treba sestavljati iz ločenih knjižnic. Tri vloge se neposredno preslikajo v razrede pravic v DRF, ki se napišejo enkrat in pripnejo pogledom.
 
-Odloči to, česa ni treba napisati. Uporabniški model, zgoščevanje gesel, ORM in migracije so del ogrodja. Pri FastAPI ali Flasku bi vsako od teh sestavil iz knjižnic in se o vsaki odločal posebej, kar je delo, opravljeno pred prvo funkcionalnostjo in brez nje.
-
-FastAPI si sloves prisluži pri vzporednosti in asinhronem delu. Ta aplikacija nima ne enega ne drugega. Edina asinhrona stvar v zasnovi je klic zunanjega API s prazniki, ki ga rešimo s predpomnjenjem enkrat na dan namesto s čakanjem znotraj zahteve, kar je boljša zasnova pod katerim koli ogrodjem.
-
-Razredi pravic v DRF se ujamejo s tremi vlogami neposredno. Pravico zapišemo enkrat, jo poimenujemo in priložimo pogledom, ki jo potrebujejo, namesto da jo ročno preverjamo v vsakem pogledu, kjer je na enega lahko pozabiti.
+FastAPI in Flask bi zahtevala, da pred prvo funkcionalnostjo izberemo in povežemo knjižnice za uporabnike, bazo in migracije. Glavna prednost FastAPI, asinhrona obdelava zahtev, v sistemu z malo sočasnimi zahtevami ni potrebna.
 
 ### Posledice
 
-- Dobro, ker so uporabniki, gesla, migracije in administracijska stran na voljo takoj in jih ni treba sestavljati.
-- Dobro, ker razredi pravic zberejo avtorizacijo po vlogah na eno mesto, kjer jo je mogoče preizkusiti ločeno od poslovne logike.
-- Dobro, ker migracije pokrijejo spremembe sheme, ki jih skozi semester pričakujemo, skupaj s potjo nazaj, kadar se sprememba ne obnese.
-- Dobro, ker je avtentikacija, izbrana v ADR-0004, prav tista, ki jo Django prinaša s seboj, zato seje, zgoščevanje gesel in prijavni tok uporabljamo tako, kot je ogrodje zamišljeno, namesto da bi jih nadomeščali.
-- Slabo, ker je Django večji in bolj mnenjski od alternativ. Njegovih konvencij se je treba naučiti in ne jih uganiti, poleg tega pa za majhen API prinese opazno število datotek.
-- Slabo, ker privzeti sinhroni model pomeni, da klica za praznike ni mogoče preprosto počakati. Rešiti ga je treba s predpomnjenjem, kar je nujno in ne izbirno, pri FastAPI pa ne bi bilo potrebno.
-- Slabo, ker ORM pri bolj zapletenih poizvedbah, kakršna je iskanje prekrivajočih se terminov, skrije nastali SQL. Tega je treba pogledati, da poizvedba v zanki ne ostane neopažena.
+- Dobro, ker so uporabniki, gesla, migracije in administratorski vmesnik na voljo od začetka.
+- Dobro, ker so preverjanja vlog zbrana v razredih pravic na enem mestu in jih je mogoče preizkušati ločeno od poslovne logike.
+- Dobro, ker migracije pokrijejo spremembe sheme, pričakovane med semestrom, in jih je mogoče razveljaviti.
+- Dobro, ker je sejna avtentikacija, izbrana v ADR-0004, vgrajena v Django.
+- Slabo, ker je Django večji in bolj predpisujoč kot FastAPI ali Flask, njegove konvencije pa se je treba naučiti.
+- Slabo, ker je Django privzeto sinhron, zato je klic zunanjega API za praznike rešen s predpomnjenjem in ne med obdelavo zahteve.
+- Slabo, ker ORM skrije ustvarjeni SQL, zato je treba zahtevnejše poizvedbe, kot je preverjanje prekrivanja, pregledati, da ne nastajajo nepotrebne poizvedbe.
