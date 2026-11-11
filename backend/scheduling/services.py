@@ -75,5 +75,28 @@ def report_attendance(assignment, attendance):
     return assignment
 
 
+@transaction.atomic
+def confirm_report(assignment, reviewer):
+    if assignment.status != LessonAssignment.Status.REPORTED:
+        raise Conflict("Only reported attendance can be confirmed.")
+    assignment.status = LessonAssignment.Status.CONFIRMED
+    assignment.reviewed_by = reviewer
+    assignment.reviewed_at = timezone.now()
+    assignment.review_comment = ""
+    assignment.save()
+    return assignment
+
+@transaction.atomic
+def reject_report(assignment, reviewer, comment):
+    if not comment or not comment.strip():
+        raise ValidationError({"comment": "A reason for rejection is required."})
+    if assignment.status != LessonAssignment.Status.REPORTED:
+        raise Conflict("Only reported attendance can be rejected.")
+    assignment.status = LessonAssignment.Status.REJECTED
+    assignment.reviewed_by = reviewer
+    assignment.reviewed_at = timezone.now()
+    assignment.review_comment = comment.strip()
+    assignment.save()
+    return assignment
 
         
