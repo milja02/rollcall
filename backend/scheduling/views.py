@@ -5,7 +5,7 @@ from django.utils import timezone
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.response import Response
 
 from accounts.models import Role, User
@@ -19,7 +19,6 @@ from .serializers import AssignmentSerializer, LessonSerializer, ProgramSerializ
 
 
 def month_range(value):
-    """'2026-11' -> (start of November, start of December), in the local time zone."""
     try:
         start = datetime.strptime(value, "%Y-%m")
     except ValueError:
@@ -39,7 +38,6 @@ class ProgramViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = Program.objects.select_related("coordinator").annotate(lessons_count=Count("lessons"))
         user = self.request.user
-        # The list is limited to own programs; a single program is guarded by the object permission (403).
         if self.action == "list" and user.role == Role.COORDINATOR:
             qs = qs.filter(coordinator=user)
         return qs
@@ -76,7 +74,6 @@ class LessonViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def assignments(self, request, pk=None):
-        """POST /api/lessons/{id}/assignments/  {"lecturer_ids": [3, 5]}"""
         lesson = self.get_object()
         ids = request.data.get("lecturer_ids")
         if not isinstance(ids, list) or not ids:
@@ -122,9 +119,16 @@ class AssignmentViewSet(
             qs = qs.filter(lesson__starts_at__gte=start, lesson__starts_at__lt=end)
         return qs.order_by("lesson__starts_at")
 
+    @action(detail=True, methods=["post"])
+    def replace(self, request, pk=None):
+        assignment = self.get_object()
+        new_lecturer=get_object_or_404(User, pk = request.data.get("lecturer_id"))
+        services.replace_lecturer(assignment, new_lecturer, request.data.get("reason"))
+        return Response(self.get_serializer(assignment).data)
+
+
 
 class LecturerListView(ListAPIView):
-    """GET /api/lecturers/?search=ana - active lecturers for the assignment picker."""
 
     serializer_class = UserSerializer
     permission_classes = [IsCoordinator]
