@@ -43,4 +43,17 @@ def assign_lecturers(lesson, lecturers):
         ensure_can_take(lesson, lecturer)
         created.append(LessonAssignment.objects.create(lesson=lesson, user = lecturer))
     return created
+
+@transaction.atomic
+def replace_lecturer(assignment, new_lecturer, reason):
+    if assignment.status != LessonAssignment.Status.ASSIGNED:
+        raise Conflict("Only assignments in state ASSIGNED can be replaced.")
+    if not reason or not reason.strip():
+        raise ValidationError({"reason": "A reason is required."})
+    ensure_can_take(assignment.lesson, new_lecturer)
+    assignment.replaced_from = assignment.user
+    assignment.replacement_reason = reason.strip()
+    assignment.user = new_lecturer
+    assignment.save()
+    return assignment
         
