@@ -4,6 +4,7 @@ from rest_framework.exceptions import APIException, ValidationError
 from .models import LessonAssignment
 from accounts.models import Role, User
 from django.db import transaction
+from django.utils import timezone
 
 class Conflict(APIException):
     status_code = 409
@@ -56,4 +57,46 @@ def replace_lecturer(assignment, new_lecturer, reason):
     assignment.user = new_lecturer
     assignment.save()
     return assignment
+
+@transaction.atomic
+def report_attendance(assignment, attendance):
+    if attendance not in LessonAssignment.Attendance.value:
+        raise ValidationError({"attendance": "Must be Present or Absent"})
+    if assignment.status not in(LessonAssignment.Status.ASSIGNED or LessonAssignment.Status.REJECTED):
+        raise Conflict("This report can no longer be changed.")
+    if timezone.localtime(assignment.lesson.starts_at).date() > timezone.localdate():
+        raise ValidationError({"attendance": "Attendance can only be reported for today or past lessons."})
+    assignment.attendance = attendance
+    assignment.status = LessonAssignment.Status.REPORTED
+    assignment.reported_at = timezone.now()
+    assignment.reviewed_by = None
+    assignment.reviewed_at = None
+    assignment.save()
+    return assignment
+
+
+@transaction.atomic
+def confirm_report(assignment, reviewer):
+    if assignment.status != LessonAssignment.Status.REPORTED:
+        raise Conflict("Only reported attendance can be confirmed.")
+    assignment.status = LessonAssignment.Status.CONFIRMED
+    assignment.reviewed_by = reviewer
+    assignment.reviewed_at = timezone.now()
+    assignment.review_comment = ""
+    assignment.save()
+    return assignment
+
+@transaction.atomic
+def reject_report(assignment, reviewer, comment):
+    if not comment or not comment.strip():
+        raise ValidationError({"comment": "A reason for rejection is required."})
+    if assignment.status != LessonAssignment.Status.REPORTED:
+        raise Conflict("Only reported attendance can be rejected.")
+    assignment.status = LessonAssignment.Status.REJECTED
+    assignment.reviewed_by = reviewer
+    assignment.reviewed_at = timezone.now()
+    assignment.review_comment = comment.strip()
+    assignment.save()
+    return assignment
+
         
