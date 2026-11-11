@@ -126,6 +126,25 @@ class AssignmentViewSet(
         services.replace_lecturer(assignment, new_lecturer, request.data.get("reason"))
         return Response(self.get_serializer(assignment).data)
 
+    @action(detail=True, methods=["post"])
+    def report(self, request, pk=None):
+        assignment = self.get_object()
+        services.report_attendance(assignment, request.data.get("attendance"))
+        return Response(self.get_serializer(assignment).data)
+
+    @action(detail=True, methods=["post"])
+    def confirm(self, request, pk=None):
+        assignment = self.get_object()
+        services.confirm_report(assignment, request.user)
+        return Response(self.get_serializer(assignment).data)
+    
+    @action(detail=True, methods=["post"])
+    def reject(self, request, pk=None):
+        assignment = self.get_object()
+        services.reject_report(assignment, request.user, request.data.get("comment"))
+        return Response(self.get_serializer(assignment).data)
+    
+
 
 
 class LecturerListView(ListAPIView):
