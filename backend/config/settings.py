@@ -1,7 +1,11 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR.parent / ".env")
 
 SECRET_KEY = 'django-insecure-pep0bc_p)6v2crs)nk=^8xrfxgr(_+*@v$kmm*=ht$yo!j0p3c'
 
@@ -74,6 +78,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = "accounts.User"
 
 
 LANGUAGE_CODE = 'en-us'
@@ -90,3 +95,4 @@ STATIC_URL = 'static/'
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
