@@ -1,3 +1,32 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+import { HOME_BY_ROLE, useAuth } from "./auth/AuthContext.jsx";
+import ProtectedRoute from "./auth/ProtectedRoute.jsx";
+import Layout from "./components/Layout.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+
+function Home() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return <Navigate to={user ? HOME_BY_ROLE[user.role] : "/login"} replace />;
+}
+
+const only = (roles, element) => <ProtectedRoute roles={roles}>{element}</ProtectedRoute>;
+
 export default function App() {
-  return <h1 className="p-6 text-2xl font-bold">RollCall</h1>;
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/admin" element={only(["ADMIN"], <AdminPage />)} />
+      </Route>
+      <Route path="*" element={<Home />} />
+    </Routes>
+  );
 }
