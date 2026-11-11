@@ -6,6 +6,7 @@ from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import ListAPIView, get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import Role, User
@@ -96,7 +97,7 @@ class AssignmentViewSet(
             return [IsLecturer(), CanAccessScheduleObject()]
         if self.action in ("confirm", "reject", "replace"):
             return [IsCoordinator(), CanAccessScheduleObject()]
-        return [CanAccessScheduleObject()]
+        return [IsAuthenticated(), CanAccessScheduleObject()]
 
     def get_queryset(self):
         qs = LessonAssignment.objects.select_related(
