@@ -2,6 +2,8 @@
 
 from rest_framework.exceptions import APIException, ValidationError
 from .models import LessonAssignment
+from accounts.models import Role, User
+from django.db import transaction
 
 class Conflict(APIException):
     status_code = 409
@@ -23,4 +25,22 @@ def check_lesson_time(starts_at, ends_at, lesson = None):
             other = find_overlap(assignment.user, starts_at, ends_at, exclude_lesson=lesson)
             if other:
                 raise Conflict(f"{assignment.user.full_name} is already assigned to '{other.title}' at that time")
+
+def ensure_can_take(lesson, lecturer):
+    if lecturer.role != Role.LECTURER or not lecturer.is_active:
+        raise ValidationError({"lecturer": "Only active lecturers can be assigned."})
+    User.objects.select_for_update().get(pk=lecturer.pk)
+    if LessonAssignment.objects.filter(lesson = lesson, user = lecturer).exists():
+        raise Conflict(f"{lecturer.full_name} is already assigned to this lesson.")
+    other = find_overlap(lecturer, lesson.start_at, lesson.ends_at, exclude_lesson=lesson)
+    if other:
+        raise Conflict(f"{lecturer.full_name} is already assigned to '{other.title}' at that time.")
+
+@transaction.atomic
+def assign_lecturers(lesson, lecturers):
+    created = []
+    for lecturer in lecturers:
+        ensure_can_take(lesson, lecturer)
+        created.append(LessonAssignment.objects.create(lesson=lesson, user = lecturer))
+    return created
         
