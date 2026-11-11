@@ -18,11 +18,11 @@ def find_overlap(user, starts_at, ends_at, exclude_lesson = None):
     assignment = qs.first()
     return assignment.lesson if assignment else None
 
-def check_lesson_time(starts_at, ends_at, lesson = None):
+def check_lesson_times(starts_at, ends_at, lesson = None):
     if ends_at <= starts_at:
         raise ValidationError({"ends_at": "End must be later than start"})
     if lesson is not None:
-        for assignment in lesson.assignment.select_related("user"):
+        for assignment in lesson.assignments.select_related("user"):
             other = find_overlap(assignment.user, starts_at, ends_at, exclude_lesson=lesson)
             if other:
                 raise Conflict(f"{assignment.user.full_name} is already assigned to '{other.title}' at that time")
@@ -33,7 +33,7 @@ def ensure_can_take(lesson, lecturer):
     User.objects.select_for_update().get(pk=lecturer.pk)
     if LessonAssignment.objects.filter(lesson = lesson, user = lecturer).exists():
         raise Conflict(f"{lecturer.full_name} is already assigned to this lesson.")
-    other = find_overlap(lecturer, lesson.start_at, lesson.ends_at, exclude_lesson=lesson)
+    other = find_overlap(lecturer, lesson.starts_at, lesson.ends_at, exclude_lesson=lesson)
     if other:
         raise Conflict(f"{lecturer.full_name} is already assigned to '{other.title}' at that time.")
 
@@ -60,9 +60,9 @@ def replace_lecturer(assignment, new_lecturer, reason):
 
 @transaction.atomic
 def report_attendance(assignment, attendance):
-    if attendance not in LessonAssignment.Attendance.value:
+    if attendance not in LessonAssignment.Attendance.values:
         raise ValidationError({"attendance": "Must be Present or Absent"})
-    if assignment.status not in(LessonAssignment.Status.ASSIGNED or LessonAssignment.Status.REJECTED):
+    if assignment.status not in (LessonAssignment.Status.ASSIGNED, LessonAssignment.Status.REJECTED):
         raise Conflict("This report can no longer be changed.")
     if timezone.localtime(assignment.lesson.starts_at).date() > timezone.localdate():
         raise ValidationError({"attendance": "Attendance can only be reported for today or past lessons."})
