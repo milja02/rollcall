@@ -35,3 +35,15 @@ Significant architecture decisions are recorded in [docs/adr](docs/adr/) using t
 | [0003](docs/adr/0003-postgresql-za-podatkovno-bazo.md)            | PostgreSQL as the database                                    | accepted |
 | [0004](docs/adr/0004-sejna-avtentikacija-s-httponly-piskotkom.md) | Session authentication with an HttpOnly cookie instead of JWT | accepted |
 | [0005](docs/adr/0005-docker-compose-za-lokalno-okolje.md)         | Docker Compose for the local development environment          | accepted |
+
+## Run with Docker
+
+Run `docker compose up --build` from the repository root
+
+Ports 5173, 8000 and 5433 must be free.
+
+The password for all accounts is demo12345:
+
+- `admin@rollcall.test`
+- `coordinator@rollcall.test`
+- `lecturer@rollcall.test` and `lecturer2@rollcall.test`
