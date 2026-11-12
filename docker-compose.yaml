@@ -2,14 +2,47 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-rollcall}
+      POSTGRES_USER: ${DB_USER:-rollcall}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-rollcall}
     ports:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
+  backend:
+    build: ./backend
+    environment:
+      DB_NAME: ${DB_NAME:-rollcall}
+      DB_USER: ${DB_USER:-rollcall}
+      DB_PASSWORD: ${DB_PASSWORD:-rollcall}
+      DB_HOST: db
+      DB_PORT: "5432"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    environment:
+      API_PROXY_TARGET: http://backend:8000
+      VITE_USE_POLLING: "1"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
 
 volumes:
   pgdata:
