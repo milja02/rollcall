@@ -5,6 +5,7 @@ import Layout from "./components/Layout.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
+import ProgramsPage from "./pages/ProgramsPage.jsx";
 
 function Home() {
   const { user, loading } = useAuth();
@@ -27,6 +28,7 @@ export default function App() {
       >
         <Route path="/admin" element={only(["ADMIN"], <AdminPage />)} />
         <Route path="/calendar" element={only(["LECTURER"], <CalendarPage />)} />
+        <Route path="/programs" element={only(["COORDINATOR"], <ProgramsPage />)} />
       </Route>
       <Route path="*" element={<Home />} />
     </Routes>
