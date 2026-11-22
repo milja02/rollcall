@@ -1,5 +1,9 @@
 # RollCall
 
+[![CI/CD](https://github.com/woooooah/rollcall/actions/workflows/ci-cd.yml/badge.svg?branch=main)](https://github.com/woooooah/rollcall/actions/workflows/ci-cd.yml)
+
+**Live app:** https://glowing-rolypoly-f14b7a.netlify.app (the backend runs on Render's free plan, so the first request after a period of inactivity can take up to a minute)
+
 A web application for scheduling educational programmes, assigning lecturers and keeping a record of which lessons were actually delivered.
 
 The application has three roles. The **administrator** manages accounts, the **coordinator** manages programmes, lessons, assignments and confirmations, and the **lecturer** works in a calendar and reports attendance.
@@ -47,3 +51,23 @@ The password for all accounts is demo12345:
 - `admin@rollcall.test`
 - `coordinator@rollcall.test`
 - `lecturer@rollcall.test` and `lecturer2@rollcall.test`
+
+## CI/CD pipeline
+
+The pipeline is defined in [.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml) and runs on every pull request to `main` and on every push to `main`. The `main` branch is protected: changes are merged through pull requests, and `lint`, `build` and `test` must pass before merging.
+
+| Job      | What it does                                                                                                                                                                                  |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lint`   | Checks code style and quality with ESLint (frontend, `eslint.config.js`) and Ruff (backend, `pyproject.toml`).                                                                                |
+| `build`  | Builds the frontend with Vite and the backend as a Docker image. npm and pip dependencies are cached. The results (`frontend-dist`, `backend-build`) are uploaded as artifacts.            |
+| `test`   | Runs the frontend tests (Vitest) and the backend tests (Django test runner against a PostgreSQL service container). Coverage reports are uploaded as artifacts.                            |
+| `deploy` | Runs only on a push to `main` after the other three jobs succeed. It uses the artifacts from `build`: the backend image is pushed to GitHub Container Registry and deployed to Render (with a Render PostgreSQL database), and the frontend is deployed to Netlify. Netlify forwards `/api/*` to the backend, whose URL is set with the `BACKEND_URL` variable. Secrets are stored in the `production` environment. |
+
+### Running tests locally
+
+```
+cd frontend && npm test
+cd backend && DB_NAME=rollcall DB_USER=rollcall DB_PASSWORD=rollcall DB_PORT=5433 python manage.py test
+```
+
+The backend tests need the database from `docker compose` to be running.
