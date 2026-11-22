@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { HOME_BY_ROLE, useAuth } from "./auth/AuthContext.jsx";
+import { HOME_BY_ROLE, useAuth } from "./auth/auth.js";
 import ProtectedRoute from "./auth/ProtectedRoute.jsx";
 import Layout from "./components/Layout.jsx";
 import AdminPage from "./pages/AdminPage.jsx";

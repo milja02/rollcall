@@ -25,6 +25,8 @@ export default function ProgramDetailPage() {
     }
   }, [id]);
   useEffect(() => {
+    // The state updates happen after the API requests resolve.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
 

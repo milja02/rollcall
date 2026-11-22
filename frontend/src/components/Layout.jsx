@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext.jsx";
+import { useAuth } from "../auth/auth.js";
 
 const LINKS = {
   LECTURER: [["/calendar", "Calendar"]],
