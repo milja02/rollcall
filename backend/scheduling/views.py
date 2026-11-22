@@ -138,13 +138,13 @@ class AssignmentViewSet(
         assignment = self.get_object()
         services.confirm_report(assignment, request.user)
         return Response(self.get_serializer(assignment).data)
-    
+
     @action(detail=True, methods=["post"])
     def reject(self, request, pk=None):
         assignment = self.get_object()
         services.reject_report(assignment, request.user, request.data.get("comment"))
         return Response(self.get_serializer(assignment).data)
-    
+
 
 
 

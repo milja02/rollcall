@@ -2,6 +2,7 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 
+
 class Role(models.TextChoices):
     ADMIN = "ADMIN", "Administrator"
     COORDINATOR = "COORDINATOR", "Coordinator"
@@ -17,7 +18,7 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
         return user
-    
+
     def create_superuser(self, email, password = None, **extra_fields):
         extra_fields.setdefault("role", Role.ADMIN)
         extra_fields.setdefault("is_staff", True)

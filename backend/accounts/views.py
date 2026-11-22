@@ -6,8 +6,10 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from .models import User
-from .serializers import UserSerializer, LoginSerializer
+from .serializers import LoginSerializer, UserSerializer
+
 
 class CsrfView(APIView):
 
@@ -52,7 +54,7 @@ class LogoutView(APIView):
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# Check if user is still logged in 
-class MeView(APIView):                       
-    def get(self, request):                  
+# Check if user is still logged in
+class MeView(APIView):
+    def get(self, request):
         return Response(UserSerializer(request.user).data)

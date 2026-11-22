@@ -1,6 +1,7 @@
+from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
-from django.conf import settings
+
 
 class Program(models.Model):
     title = models.CharField(max_length=255)
@@ -61,7 +62,7 @@ class LessonAssignment(models.Model):
     )
     reviewed_at = models.DateTimeField(null=True, blank=True)
     review_comment = models.TextField(blank=True)
-    
+
     replaced_from = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,

@@ -1,6 +1,8 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission
+
 from accounts.models import Role
 from accounts.permissions import IsAdminOrCoordinator, IsCoordinator
+
 from .models import Lesson, LessonAssignment, Program
 
 __all__ = ["IsCoordinator", "IsAdminOrCoordinator", "CanAccessScheduleObject"]

@@ -1,0 +1,40 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Frontend: ESLint (config in frontend/eslint.config.js)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
+      # Backend: Ruff (config in backend/pyproject.toml)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - name: Install backend dependencies
+        working-directory: backend
+        run: pip install -r requirements-dev.txt
+      - name: Lint backend
+        working-directory: backend
+        run: ruff check .

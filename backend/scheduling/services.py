@@ -1,10 +1,13 @@
 # Business rules
 
-from rest_framework.exceptions import APIException, ValidationError
-from .models import LessonAssignment
-from accounts.models import Role, User
 from django.db import transaction
 from django.utils import timezone
+from rest_framework.exceptions import APIException, ValidationError
+
+from accounts.models import Role, User
+
+from .models import LessonAssignment
+
 
 class Conflict(APIException):
     status_code = 409
@@ -12,7 +15,10 @@ class Conflict(APIException):
     default_code = "conflict"
 
 def find_overlap(user, starts_at, ends_at, exclude_lesson = None):
-    qs = LessonAssignment.objects.select_related("lesson").filter(user = user, lesson__starts_at__lt = ends_at, lesson__ends_at__gt=starts_at) # lt - less than, gt - greater than (ending at 10:00 and starting at 10:00 is not an overlap)
+    # lt - less than, gt - greater than (ending at 10:00 and starting at 10:00 is not an overlap)
+    qs = LessonAssignment.objects.select_related("lesson").filter(
+        user=user, lesson__starts_at__lt=ends_at, lesson__ends_at__gt=starts_at
+    )
     if exclude_lesson is not None:
         qs = qs.exclude(lesson = exclude_lesson)
     assignment = qs.first()
@@ -99,4 +105,3 @@ def reject_report(assignment, reviewer, comment):
     assignment.save()
     return assignment
 
-        
