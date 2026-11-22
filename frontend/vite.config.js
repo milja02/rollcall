@@ -11,4 +11,12 @@ export default defineConfig({
     },
     watch: { usePolling: process.env.VITE_USE_POLLING === "1" },
     },
+  test: {
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.{js,jsx}"],
+      reporter: ["text", "html"],
+      reportsDirectory: "coverage",
+    },
+  },
 });
