@@ -7,13 +7,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR.parent / ".env")
 
-SECRET_KEY = 'django-insecure-pep0bc_p)6v2crs)nk=^8xrfxgr(_+*@v$kmm*=ht$yo!j0p3c'
+# Lokalno se uporabijo privzete vrednosti, v produkciji (Render) jih nastavimo z okoljskimi spremenljivkami.
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-pep0bc_p)6v2crs)nk=^8xrfxgr(_+*@v$kmm*=ht$yo!j0p3c")
 
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "http://localhost:5173").split(",")
+
+# Render streze aplikacijo prek HTTPS proxyja
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 INSTALLED_APPS = [
@@ -107,4 +111,9 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
+
+if not DEBUG:
+    # v produkciji piskotke posiljamo samo prek HTTPS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
