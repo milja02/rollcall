@@ -9,3 +9,4 @@ dist/
 .env
 staticfiles/
 coverage/
+.coverage
