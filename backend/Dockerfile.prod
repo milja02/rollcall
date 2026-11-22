@@ -1,0 +1,16 @@
+# Produkcijska slika za Render (lokalni razvoj uporablja Dockerfile)
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+# Render nastavi PORT; ob zagonu se izvedejo migracije in demo podatki (seed_demo je varno pognati veckrat)
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py seed_demo && gunicorn config.wsgi --bind 0.0.0.0:${PORT:-8000}"]

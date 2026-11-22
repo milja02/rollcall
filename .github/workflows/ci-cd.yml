@@ -84,15 +84,17 @@ jobs:
               run: |
                   python manage.py check
                   python manage.py collectstatic --noinput
+            # Paket backenda je Docker slika, ki jo shranimo kot datoteko in nalozimo kot artefakt
+            - name: Build backend Docker image
+              working-directory: backend
+              run: |
+                  docker build -f Dockerfile.prod -t rollcall-backend .
+                  docker save rollcall-backend | gzip > ../backend-image.tar.gz
             - name: Upload backend build
               uses: actions/upload-artifact@v4
               with:
                   name: backend-build
-                  path: |
-                      backend/
-                      !backend/**/__pycache__/
-                      !backend/requirements-dev.txt
-                      !backend/pyproject.toml
+                  path: backend-image.tar.gz
                   if-no-files-found: error
 
     test:
@@ -162,3 +164,53 @@ jobs:
               with:
                   name: backend-coverage
                   path: backend/coverage/
+
+    deploy:
+        name: deploy
+        # samo ob pushu na main in samo, ce so lint, build in test uspesni
+        needs: [lint, build, test]
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        runs-on: ubuntu-latest
+        environment: production
+        permissions:
+            contents: read
+            packages: write # za objavo Docker slike v GitHub Container Registry
+        env:
+            IMAGE: ghcr.io/${{ github.repository_owner }}/rollcall-backend:${{ github.sha }}
+        steps:
+            # Uporabimo artefakte iz build joba, aplikacije ne gradimo ponovno
+            - name: Download frontend build
+              uses: actions/download-artifact@v4
+              with:
+                  name: frontend-dist
+                  path: dist
+            - name: Download backend build
+              uses: actions/download-artifact@v4
+              with:
+                  name: backend-build
+
+            # Backend: slika gre v GHCR, Render jo nato zazene
+            - name: Push backend image to GHCR
+              run: |
+                  docker load < backend-image.tar.gz
+                  docker tag rollcall-backend "$IMAGE"
+                  echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+                  docker push "$IMAGE"
+            - name: Deploy backend to Render
+              env:
+                  RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+              run: curl -fsS -X POST "${RENDER_DEPLOY_HOOK_URL}&imgURL=$(jq -rn --arg u "$IMAGE" '$u|@uri')"
+
+            # Frontend: Netlify posreduje /api/* na backend, URL backenda je v spremenljivki BACKEND_URL
+            - name: Connect frontend to backend
+              env:
+                  BACKEND_URL: ${{ vars.BACKEND_URL }}
+              run: |
+                  test -n "$BACKEND_URL" || { echo "BACKEND_URL ni nastavljen"; exit 1; }
+                  printf '/api/*  %s/api/:splat  200\n/*  /index.html  200\n' "$BACKEND_URL" > dist/_redirects
+                  cat dist/_redirects
+            - name: Deploy frontend to Netlify
+              env:
+                  NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+                  NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+              run: npx --yes netlify-cli@27.16.3 deploy --prod --no-build --dir dist --site "$NETLIFY_SITE_ID"
