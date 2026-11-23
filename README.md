@@ -2,7 +2,7 @@
 
 [![CI/CD](https://github.com/woooooah/rollcall/actions/workflows/ci-cd.yml/badge.svg?branch=main)](https://github.com/woooooah/rollcall/actions/workflows/ci-cd.yml)
 
-**Live app:** https://glowing-rolypoly-f14b7a.netlify.app (the backend runs on Render's free plan, so the first request after a period of inactivity can take up to a minute)
+**Live app:** https://glowing-rolypoly-f14b7a.netlify.app/login (the backend runs on Render's free plan, so the first request after a period of inactivity can take up to a minute)
 
 A web application for scheduling educational programmes, assigning lecturers and keeping a record of which lessons were actually delivered.
 
